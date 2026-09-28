@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-selected="none">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CHOOSE TERMINAL // AA vs VV</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Chakra+Petch:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --font-display: 'Anton', sans-serif;
+      --font-body: 'Chakra Petch', sans-serif;
+      --font-mono: 'Share Tech Mono', monospace;
+
+      /* Base transition */
+      --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+      --anim-speed: 0.55s;
+
+      /* Theme dynamic variables */
+      --page-bg: #09090b;
+      --page-fg: #f4f4f5;
+      --hud-line: rgba(255, 255, 255, 0.15);
+      --hud-glow: rgba(255, 255, 255, 0.45);
+      --grid-opacity: 0.08;
+    }
+
+    /* AA PRIMED: Entire page morphs to Pure Luxe White */
+    html[data-selected="aa"] {
+      --page-bg: #ffffff;
+      --page-fg: #000000;
+      --hud-line: rgba(0, 0, 0, 0.22);
+      --hud-glow: rgba(0, 0, 0, 0.35);
+      --grid-opacity: 0.055;
+    }
+
+    /* VV PRIMED: Entire page morphs to Deep Onyx Stealth Black */
+    html[data-selected="vv"] {
+      --page-bg: #000000;
+      --page-fg: #ffffff;
+      --hud-line: rgba(255, 255, 255, 0.25);
+      --hud-glow: rgba(255, 255, 255, 0.55);
+      --grid-opacity: 0.12;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--page-bg);
+      color: var(--page-fg);
+      font-family: var(--font-body);
+      transition: background-color var(--anim-speed) var(--ease-out-expo),
+                  color var(--anim-speed) var(--ease-out-expo);
+      position: relative;
+    }
+
+    /* Ambient Cyber Grids and Scanlines */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      background-size: 50px 50px;
+      background-image: 
+        linear-gradient(to right, var(--hud-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--hud-line) 1px, transparent 1px);
+      opacity: var(--grid-opacity);
+      transition: opacity var(--anim-speed) ease;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      box-shadow: inset 0 0 160px rgba(0, 0, 0, 0.5);
+      transition: box-shadow var(--anim-speed) ease;
+    }
+    html[data-selected="aa"] .vignette {
+      box-shadow: inset 0 0 160px rgba(0, 0, 0, 0.08);
+    }
+    html[data-selected="vv"] .vignette {
+      box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.95);
+    }
+
+    /* Top Commercial Ticker HUD */
+    .ticker-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 34px;
+      z-index: 80;
+      background: color-mix(in srgb, var(--page-bg) 85%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--hud-line);
+      display: flex;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      transition: border-color var(--anim-speed) ease, background-color var(--anim-speed) ease;
+    }
+
+    .ticker-badge {
+      background: var(--page-fg);
+      color: var(--page-bg);
+      padding: 0 14px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      flex-shrink: 0;
+      transition: background-color var(--anim-speed) ease, color var(--anim-speed) ease;
+    }
+
+    .ticker-scroll {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-text {
+      display: inline-block;
+      animation: tickerMarquee 32s linear infinite;
+    }
+    @keyframes tickerMarquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Central Character Choice Container */
+    .arena {
+      position: absolute;
+      inset: 34px 0 38px 0;
+      display: flex;
+      z-index: 10;
+      perspective: 1200px;
+    }
+
+    /* Half Panels (Split Screen) */
+    .panel-half {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      overflow: hidden;
+      transition: flex var(--anim-speed) var(--ease-out-expo),
+                  opacity var(--anim-speed) var(--ease-out-expo),
+                  transform var(--anim-speed) var(--ease-out-expo),
+                  background var(--anim-speed) var(--ease-out-expo);
+      border: 1px solid transparent;
+    }
+
+    /* Hover and Active Sizing */
+    .panel-half:hover {
+      background: color-mix(in srgb, var(--page-fg) 3%, transparent);
+    }
+
+    /* When AA is primed */
+    html[data-selected="aa"] .panel-aa {
+      flex: 1.25;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.06);
+    }
+    html[data-selected="aa"] .panel-vv {
+      flex: 0.75;
+      opacity: 0.35;
+      filter: grayscale(0.7) blur(1px);
+    }
+
+    /* When VV is primed */
+    html[data-selected="vv"] .panel-vv {
+      flex: 1.25;
+      background: rgba(8, 8, 8, 0.95);
+      box-shadow: inset 0 0 60px rgba(255, 255, 255, 0.05);
+    }
+    html[data-selected="vv"] .panel-aa {
+      flex: 0.75;
+      opacity: 0.35;
+      filter: grayscale(0.7) blur(1px);
+    }
+
+    /* Vertical HUD Divider Line with Target Crosshair */
+    .divider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--hud-line);
+      z-index: 30;
+      pointer-events: none;
+      transform: translateX(-50%);
+      transition: left var(--anim-speed) var(--ease-out-expo),
+                  background-color var(--anim-speed) ease;
+    }
+    html[data-selected="aa"] .divider-line { left: 62.5%; }
+    html[data-selected="vv"] .divider-line { left: 37.5%; }
+
+    .crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      border: 1px dashed var(--hud-line);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--page-fg);
+      opacity: 0.65;
+      background: var(--page-bg);
+      transition: background-color var(--anim-speed) ease, color var(--anim-speed) ease;
+    }
+    .crosshair::before, .crosshair::after {
+      content: '';
+      position: absolute;
+      background: var(--page-fg);
+    }
+    .crosshair::before { width: 10px; height: 1px; }
+    .crosshair::after { width: 1px; height: 10px; }
+
+    /* Character Badge & Text Layout */
+    .character-box {
+      max-width: 440px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 5;
+    }
+
+    .faction-id {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.35em;
+      opacity: 0.7;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .faction-id span {
+      width: 20px;
+      height: 1px;
+      background: currentColor;
+      display: inline-block;
+    }
+
+    /* Giant Character Titles (AA / VV) */
+    .giant-title {
+      font-family: var(--font-display);
+      font-size: clamp(6.5rem, 16vw, 13.5rem);
+      line-height: 0.85;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 10px 0;
+      transition: transform var(--anim-speed) var(--ease-out-expo),
+                  text-shadow var(--anim-speed) ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .panel-half:hover .giant-title {
+      transform: scale(1.03);
+    }
+
+    /* Subtle character ambient watermark in background */
+    .watermark {
+      position: absolute;
+      font-family: var(--font-display);
+      font-size: clamp(14rem, 30vw, 24rem);
+      color: currentColor;
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 0;
+      line-height: 1;
+      transform: translateY(-8%);
+      transition: opacity var(--anim-speed) ease;
+    }
+    .panel-half:hover .watermark {
+      opacity: 0.06;
+    }
+
+    .dest-url {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      letter-spacing: 0.12em;
+      opacity: 0.85;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .desc-tagline {
+      font-size: 14px;
+      line-height: 1.5;
+      opacity: 0.78;
+      max-width: 320px;
+      margin-bottom: 24px;
+    }
+
+    /* Primed Status Call-To-Action Box */
+    .cta-box {
+      width: 100%;
+      border: 1px solid var(--hud-line);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: color-mix(in srgb, var(--page-fg) 4%, transparent);
+      transition: all var(--anim-speed) var(--ease-out-expo);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-main {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cta-sub {
+      font-size: 10.5px;
+      opacity: 0.65;
+    }
+
+    /* Pulsing indicator when primed */
+    .pulse-radar {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      display: inline-block;
+      box-shadow: 0 0 12px currentColor;
+    }
+
+    /* Active Highlight States */
+    html[data-selected="aa"] .panel-aa .cta-box {
+      border-color: #000000;
+      background: #000000;
+      color: #ffffff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+    }
+
+    html[data-selected="vv"] .panel-vv .cta-box {
+      border-color: #ffffff;
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* Tech Corner Decors */
+    .tech-corner {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid currentColor;
+      opacity: 0.35;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .tl { top: 16px; left: 16px; border-right: 0; border-bottom: 0; }
+    .tr { top: 16px; right: 16px; border-left: 0; border-bottom: 0; }
+    .bl { bottom: 16px; left: 16px; border-right: 0; border-top: 0; }
+    .br { bottom: 16px; right: 16px; border-left: 0; border-top: 0; }
+
+    .panel-half:hover .tech-corner {
+      opacity: 0.85;
+    }
+
+    /* Bottom HUD Operational Bar */
+    .footer-hud {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 38px;
+      background: color-mix(in srgb, var(--page-bg) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--hud-line);
+      z-index: 80;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      transition: border-color var(--anim-speed) ease, background-color var(--anim-speed) ease;
+    }
+
+    .key-hints {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    kbd {
+      font-family: var(--font-mono);
+      background: color-mix(in srgb, var(--page-fg) 10%, transparent);
+      border: 1px solid var(--hud-line);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: inherit;
+    }
+
+    /* Floating Toast / Screen Flash on Redirect */
+    #action-flash {
+      position: fixed;
+      inset: 0;
+      background: var(--page-fg);
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #action-flash.flash-now {
+      opacity: 0.92;
+    }
+
+    #hud-toast {
+      position: fixed;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--page-fg);
+      color: var(--page-bg);
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s var(--ease-out-expo);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    #hud-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Mobile Responsive Layout: Vertical Split on Narrow Screens */
+    @media (max-width: 768px) {
+      .arena {
+        flex-direction: column;
+      }
+      .divider-line {
+        left: 0;
+        right: 0;
+        top: 50%;
+        bottom: auto;
+        width: 100%;
+        height: 1px;
+        transform: translateY(-50%);
+        transition: top var(--anim-speed) var(--ease-out-expo);
+      }
+      html[data-selected="aa"] .divider-line { top: 62.5%; left: 0; }
+      html[data-selected="vv"] .divider-line { top: 37.5%; left: 0; }
+
+      .giant-title {
+        font-size: clamp(4.5rem, 18vw, 7.5rem);
+      }
+      .panel-half {
+        padding: 24px 18px;
+      }
+      .desc-tagline {
+        display: none;
+      }
+      .key-hints {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background elements -->
+  <div class="bg-grid"></div>
+  <div class="vignette"></div>
+  <div id="action-flash"></div>
+
+  <!-- Top Status Bar -->
+  <header class="ticker-bar">
+    <div class="ticker-badge">SELECT INTERFACE</div>
+    <div class="ticker-scroll">
+      <div class="ticker-text">
+        &bull; DUAL-FACTION GATEWAY INITIALIZED &bull; LEFT: AA PROTOCOL (a.zevzhan.com) &bull; RIGHT: VV PROTOCOL (k.zevzhan.com) &bull; CLICK ONCE TO PRIME THEME (WHITE / BLACK) &bull; CLICK AGAIN TO CONFIRM & ENTER &bull;
+      </div>
+    </div>
+  </header>
+
+  <!-- Central Split Arena -->
+  <main class="arena" role="region" aria-label="角色分流選擇">
+
+    <!-- Divider and Crosshair Target Indicator -->
+    <div class="divider-line">
+      <div class="crosshair">SYS</div>
+    </div>
+
+    <!-- LEFT SIDE: AA -->
+    <section class="panel-half panel-aa" id="btn-aa" role="button" tabindex="0" aria-label="選擇 AA 終端機">
+      <div class="tech-corner tl"></div>
+      <div class="tech-corner tr"></div>
+      <div class="tech-corner bl"></div>
+      <div class="tech-corner br"></div>
+      <div class="watermark">AA</div>
+
+      <div class="character-box">
+        <div class="faction-id">
+          <span></span> PROTOCOL // ALPHA <span></span>
+        </div>
+
+        <h1 class="giant-title">AA</h1>
+
+        <div class="dest-url">
+          <span>🌐 a.zevzhan.com</span>
+          <span style="opacity:0.6;">/ aa2.html</span>
+        </div>
+
+        <p class="desc-tagline">
+          iLearning 外部專屬傳送門 &bull; 核心課表一鍵直達 &bull; 極簡純白光域
+        </p>
+
+        <div class="cta-box" id="cta-aa">
+          <div class="cta-main">
+            <span class="pulse-radar"></span>
+            <span id="cta-text-aa">CLICK TO ARM [AA]</span>
+          </div>
+          <div class="cta-sub" id="cta-sub-aa">MORPH TO LUXE WHITE &bull; PRESS [A] / [←]</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDE: VV -->
+    <section class="panel-half panel-vv" id="btn-vv" role="button" tabindex="0" aria-label="選擇 VV 終端機">
+      <div class="tech-corner tl"></div>
+      <div class="tech-corner tr"></div>
+      <div class="tech-corner bl"></div>
+      <div class="tech-corner br"></div>
+      <div class="watermark">VV</div>
+
+      <div class="character-box">
+        <div class="faction-id">
+          <span></span> PROTOCOL // VICTOR <span></span>
+        </div>
+
+        <h1 class="giant-title">VV</h1>
+
+        <div class="dest-url">
+          <span>🌐 k.zevzhan.com</span>
+          <span style="opacity:0.6;">/ vv2aa.html</span>
+        </div>
+
+        <p class="desc-tagline">
+          互動跳轉大綱 &bull; 雙矩陣與每日切換 &bull; 隱形黑曜科技 HUD
+        </p>
+
+        <div class="cta-box" id="cta-vv">
+          <div class="cta-main">
+            <span class="pulse-radar"></span>
+            <span id="cta-text-vv">CLICK TO ARM [VV]</span>
+          </div>
+          <div class="cta-sub" id="cta-sub-vv">MORPH TO STEALTH BLACK &bull; PRESS [V] / [→]</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Control Bar -->
+  <footer class="footer-hud">
+    <div class="key-hints">
+      <span>KEYBOARD:</span>
+      <span><kbd>←</kbd> 或 <kbd>A</kbd> 選定 AA</span>
+      <span><kbd>→</kbd> 或 <kbd>V</kbd> 選定 VV</span>
+      <span><kbd>ENTER</kbd> 確認進入</span>
+    </div>
+    <div id="status-readout" style="font-weight:700;">
+      READY // STANDBY
+    </div>
+  </footer>
+
+  <!-- Notification Toast -->
+  <div id="hud-toast"></div>
+
+  <script>
+    (function () {
+      const html = document.documentElement;
+      const btnAA = document.getElementById('btn-aa');
+      const btnVV = document.getElementById('btn-vv');
+
+      const ctaTextAA = document.getElementById('cta-text-aa');
+      const ctaSubAA = document.getElementById('cta-sub-aa');
+      const ctaTextVV = document.getElementById('cta-text-vv');
+      const ctaSubVV = document.getElementById('cta-sub-vv');
+      const statusReadout = document.getElementById('status-readout');
+      const hudToast = document.getElementById('hud-toast');
+      const flashScreen = document.getElementById('action-flash');
+
+      // Destination Targets
+      const URL_AA = 'https://a.zevzhan.com/aa2.html';
+      const URL_VV = 'https://k.zevzhan.com/vv2aa.html';
+
+      // Internal State: 'none' | 'aa' | 'vv'
+      let currentSelected = 'none';
+      let toastTimer = null;
+
+      function showToast(msg) {
+        clearTimeout(toastTimer);
+        hudToast.textContent = msg;
+        hudToast.classList.add('show');
+        toastTimer = setTimeout(() => {
+          hudToast.classList.remove('show');
+        }, 2000);
+      }
+
+      function executeRedirect(targetUrl, terminalName) {
+        statusReadout.textContent = `REDIRECTING >> ${terminalName}`;
+        showToast(`ENTERING ${terminalName} ...`);
+        
+        // Visual haptic flash
+        flashScreen.classList.add('flash-now');
+
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 320);
+      }
+
+      // Handle AA interaction (Left)
+      function handleAAClick() {
+        if (currentSelected === 'aa') {
+          // Second click on AA: Confirm and Navigate
+          executeRedirect(URL_AA, 'AA INTERFACE');
+        } else {
+          // First click on AA (or switching from VV):
+          // Turn entire background to WHITE, prime AA, cancel VV
+          currentSelected = 'aa';
+          html.setAttribute('data-selected', 'aa');
+
+          // Update AA texts to Confirmation state
+          ctaTextAA.textContent = 'ENTER AA INTERFACE ↗';
+          ctaSubAA.textContent = 'CONFIRM SELECTION // CLICK TO LAUNCH';
+
+          // Reset VV texts to Standby
+          ctaTextVV.textContent = 'CLICK TO ARM [VV]';
+          ctaSubVV.textContent = 'MORPH TO STEALTH BLACK &bull; PRESS [V] / [→]';
+
+          statusReadout.textContent = 'ARMED: AA // CLICK AGAIN TO ENTER';
+          showToast('AA SELECTED &bull; WHITE THEME ARMED &bull; CLICK TO ENTER');
+        }
+      }
+
+      // Handle VV interaction (Right)
+      function handleVVClick() {
+        if (currentSelected === 'vv') {
+          // Second click on VV: Confirm and Navigate
+          executeRedirect(URL_VV, 'VV INTERFACE');
+        } else {
+          // First click on VV (or switching from AA):
+          // Turn entire background to BLACK, prime VV, cancel AA
+          currentSelected = 'vv';
+          html.setAttribute('data-selected', 'vv');
+
+          // Update VV texts to Confirmation state
+          ctaTextVV.textContent = 'ENTER VV INTERFACE ↗';
+          ctaSubVV.textContent = 'CONFIRM SELECTION // CLICK TO LAUNCH';
+
+          // Reset AA texts to Standby
+          ctaTextAA.textContent = 'CLICK TO ARM [AA]';
+          ctaSubAA.textContent = 'MORPH TO LUXE WHITE &bull; PRESS [A] / [←]';
+
+          statusReadout.textContent = 'ARMED: VV // CLICK AGAIN TO ENTER';
+          showToast('VV SELECTED &bull; BLACK THEME ARMED &bull; CLICK TO ENTER');
+        }
+      }
+
+      // Click Event Listeners
+      btnAA.addEventListener('click', handleAAClick);
+      btnVV.addEventListener('click', handleVVClick);
+
+      // Keyboard Controls (Left/A, Right/V, Enter/Space)
+      window.addEventListener('keydown', (e) => {
+        const key = e.key;
+
+        if (key === 'ArrowLeft' || key === 'a' || key === 'A') {
+          handleAAClick();
+        } else if (key === 'ArrowRight' || key === 'v' || key === 'V') {
+          handleVVClick();
+        } else if (key === 'Enter' || key === ' ') {
+          e.preventDefault();
+          if (currentSelected === 'aa') {
+            executeRedirect(URL_AA, 'AA INTERFACE');
+          } else if (currentSelected === 'vv') {
+            executeRedirect(URL_VV, 'VV INTERFACE');
+          } else {
+            // Default arm AA on blind enter
+            handleAAClick();
+          }
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>
